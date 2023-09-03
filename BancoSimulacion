@@ -1,0 +1,219 @@
+import java.util.Random;
+
+public class BancoSimulacion {
+    // Parámetros
+    static double lambda = 40; // Número promedio de clientes por hora
+    static int tiempoActual = 480;
+    static int totalClientes, tiempoTotalEspera, contador, arrivals; 
+    static int cajas[] = {0,0,0,0};
+    static int totalClientesCajas[] = {0,0,0,0};
+    //static int totalTiempoCajas[] = {0,0,0,0};
+    static int cajasVaciadas;
+    static boolean isVacio;
+    static MyQueue colaClientes = new MyQueue(70);
+    static int clientesAtendidos = 0;
+    static Random random;
+    
+
+    public static void main(String[] args) {
+        // Inicialización
+        random = new Random();
+        contador = 0;
+        tiempoTotalEspera = 0;
+        totalClientes = 0;
+
+        
+        while(tiempoActual > 0) {
+        	
+        	if(tiempoActual == 120) {
+        		crearClientes();    
+        	}
+        	
+        	else if(contador >= 60) {
+        		//llegan clientes cada hora
+        		contador = 0;
+        		crearClientes();
+        	}
+        	
+        	else {
+        		//si hay cajas vacias y hay clientes en la fila
+                if(isCajaVacia() != 0 && colaClientes.clientesEnCola() != 0) {
+                	
+                	colaClientes.dequeue();
+                    //colaClientes.toString();
+                	int nuevoTiempo = random.nextInt(10) + 1;
+                	tiempoTotalEspera = tiempoTotalEspera + nuevoTiempo;
+                	//System.out.println("Tiempo en caja " + isCajaVacia() + " es: " + nuevoTiempo);
+                	cajas[isCajaVacia()-1] = nuevoTiempo;
+                	//System.out.println(cajas[isCajaVacia()]);
+                	imprimirCajas();
+            	}
+                
+        		//si hay cajas vacias y hay no clientes en la fila
+                if(isCajaVacia() != 0 && colaClientes.clientesEnCola() == 0) {
+                	for(int i = 0; i < (5-cajasVacias()); i++) {
+                    	restarCajaMenor();
+                    	clientesAtendidos = clientesAtendidos + cajasVaciadas;
+                    	imprimirCajas();
+                	}
+                	int faltante = 60 - contador;
+                	contador = contador + faltante;
+                	tiempoActual = tiempoActual - (faltante + 1);
+
+            	}
+
+            	//si no hay cajas vacias librar una caja
+                if(isCajaVacia() == 0) {
+                	restarCajaMenor();
+                	clientesAtendidos = clientesAtendidos + cajasVaciadas;
+                	imprimirCajas();
+                }
+        		
+        	}
+        
+        }
+        printStatistics();
+
+
+                
+
+    }
+    
+    
+    public static void crearClientes() {
+		arrivals = distribucionPoisson(lambda);
+		totalClientes = totalClientes + arrivals;
+        System.out.println("\n" + tiempoActual + " minutos antes de cerrar llegaron " + arrivals + " clientes.");
+        enqueueClientes(arrivals);
+        //colaClientes.toString();
+		if(isColaVacia()) {
+            for(int i = 0; i < 4; i ++) {
+            	if(colaClientes.clientesEnCola() != 0) {
+                	colaClientes.dequeue();
+                	int nuevoTiempo = random.nextInt(10-1+1) + 1;
+                	tiempoTotalEspera = tiempoTotalEspera + nuevoTiempo;
+                	cajas[i] = nuevoTiempo;
+            	}
+            	else {
+            		break;
+            	}
+
+            }
+        	imprimirCajas();
+        	
+        	restarCajaMenor();
+        	clientesAtendidos = clientesAtendidos + cajasVaciadas;
+        	imprimirCajas();
+		}  
+
+    }
+    
+    public static void enqueueClientes(int arrivals) {
+    	for(int i = 0; i < arrivals; i ++) {
+    		colaClientes.enqueue();
+    	}
+    }
+    
+    public static int cajasVacias() {
+    	int cajasVacias = 0;
+    	for(int i = 0; i<4; i++) {
+    		if(cajas[i] == 0) {
+    			cajasVacias ++;
+    		}
+    	}
+    	return cajasVacias;
+    }
+    
+    public static void llenarCajasVacias() {
+    	for(int i = 0; i < 4; i++) {
+    		if(cajas[i] == 0) {
+               	colaClientes.dequeue();
+            	int nuevoTiempo = random.nextInt(10) + 1;
+            	tiempoTotalEspera = tiempoTotalEspera + nuevoTiempo;
+            	cajas[isCajaVacia()-1] = nuevoTiempo;
+    		}
+    	}
+    }
+    
+    public static boolean isColaVacia() {
+    	isVacio = true;
+    	for(int i = 0; i < 4; i++) {
+    		if(cajas[i] != 0) {
+    			isVacio = false;
+    			break;
+    		}
+    	}
+    	return isVacio;
+    }
+    public static int isCajaVacia() {
+    	int cajaVacia = 0;
+    	for(int i = 0; i < 4; i++) {
+    		if(cajas[i] == 0) {
+    			cajaVacia = i + 1;
+    		}
+    	}
+    	return cajaVacia;
+    }
+    
+    public static void restarCajaMenor() {
+    	int menorTiempo = 10;
+    	cajasVaciadas = 0;
+    	for(int i = 0; i< 4; i++) {
+    		if(cajas[i]< menorTiempo && cajas[i] > 0) {
+    			menorTiempo = cajas[i];
+    		}
+    	}
+    	contador = contador + menorTiempo;
+    	tiempoActual = tiempoActual - menorTiempo;
+    	for(int i = 0; i < 4 ; i++) {
+    		if(cajas[i] != 0) {
+    			cajas[i] = cajas[i] - menorTiempo;
+    			if(cajas[i] == 0) {
+    				cajasVaciadas++;
+    				totalClientesCajas[i] = totalClientesCajas[i] + 1;
+    			}
+    		}
+    	}
+    }
+    
+    public static void imprimirCajas() {
+    	System.out.print("\n------------------------------------\n");
+    	System.out.println("Tiempo Actual: " + tiempoActual);
+    	for(int i = 0; i < 4; i++) {
+    		System.out.println("Caja " + (i+1) + ": " + cajas[i]);
+    	}
+    	System.out.println("Total de clientes atendidos: " + clientesAtendidos);
+    	System.out.println("Clientes en fila: " + colaClientes.clientesEnCola());
+    	
+
+    }
+    
+    public static void printStatistics() {
+    	System.out.print("\n------------------------------------\n");
+    	System.out.println("Fin de simulacion");
+    	System.out.println("Total de clientes Atendidos: " + totalClientes);
+    	System.out.println("Promedio de clientes por hora: " + totalClientes/8);
+    	System.out.println("Tiempo de espera promedio: " + (tiempoTotalEspera/totalClientes) + " minutos");
+    	System.out.println("----Clientes atendidos por caja----");
+    	System.out.println("Caja 1: " + totalClientesCajas[0]);
+      	System.out.println("Caja 2: " + totalClientesCajas[1]);
+      	System.out.println("Caja 3: " + totalClientesCajas[2]);
+      	System.out.println("Caja 4: " + totalClientesCajas[3]);
+    	System.out.println("Clientes no atendidos: " + colaClientes.clientesEnCola());
+
+    }
+
+    // Generador de números aleatorios con distribución de Poisson
+    public static int distribucionPoisson(double lambda) {
+        double L = Math.exp(-lambda);
+        double p = 1.0;
+        int k = 0;
+
+        do {
+            k++;
+            p *= Math.random();
+        } while (p > L);
+
+        return k - 1;
+    }
+}

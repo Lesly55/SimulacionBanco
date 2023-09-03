@@ -2,7 +2,7 @@ import java.util.Random;
 
 public class BancoSimulacion {
     // Parámetros
-    static double lambda = 40; // Número promedio de clientes por hora
+    static double lambda = 5; // Número promedio de clientes por hora
     static int tiempoActual = 480;
     static int totalClientes, tiempoTotalEspera, contador, arrivals; 
     static int cajas[] = {0,0,0,0};
@@ -25,7 +25,7 @@ public class BancoSimulacion {
         
         while(tiempoActual > 0) {
         	
-        	if(tiempoActual == 120) {
+        	if(tiempoActual == 480) {
         		crearClientes();    
         	}
         	
@@ -51,14 +51,15 @@ public class BancoSimulacion {
                 
         		//si hay cajas vacias y hay no clientes en la fila
                 if(isCajaVacia() != 0 && colaClientes.clientesEnCola() == 0) {
-                	for(int i = 0; i < (5-cajasVacias()); i++) {
+                	int loop = 4-cajasVacias();
+                	for(int i = 0; i < loop; i++) {
                     	restarCajaMenor();
                     	clientesAtendidos = clientesAtendidos + cajasVaciadas;
                     	imprimirCajas();
                 	}
                 	int faltante = 60 - contador;
                 	contador = contador + faltante;
-                	tiempoActual = tiempoActual - (faltante + 1);
+                	tiempoActual = tiempoActual - (faltante);
 
             	}
 

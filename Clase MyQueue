@@ -1,0 +1,58 @@
+
+public class MyQueue {
+	
+	int[] queue;
+	int[] queue2;
+	int tail;
+	int Max;
+	
+	public MyQueue(int arregloLength) {
+		queue = new int[arregloLength];
+		tail = 0;
+		Max = arregloLength;
+	}
+	//metodo de queue 
+	
+	public void enqueue() {
+		if(tail == Max) {
+			System.out.println("\nArreglo lleno :( ");
+		}
+		else {
+			queue[tail] = 1;
+			tail++;
+		}
+	}
+	
+	
+	
+	public void dequeue() {
+		
+		if(tail == 0) {
+			System.out.println("\nArreglo esta vacio :(");
+		}
+		else {
+			for(int i = 0; i < tail; i++) {
+				int j = i + 1;
+				queue[i] = queue[j];
+			}
+			tail--;
+		}
+		
+	}
+	
+	public int clientesEnCola() {
+		return tail;
+	}
+	
+	public String toString() {
+		System.out.println("Queue");
+		for(int i = 0; i < tail; i++) {
+			System.out.print(queue[i] + ", ");
+		}
+		System.out.print("\n");
+		return null;
+		
+	}
+	
+
+}
